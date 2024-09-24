@@ -17,7 +17,7 @@ export default class Play {
         this.controls = controls;
         this.progress = progress;
     }
-
+    #flag = "next";
     #currentSong = 0;
     #isPlayed = false;
     percent() {
@@ -66,7 +66,7 @@ export default class Play {
             .map(
                 function (song, index) {
                     let name = song.name, artist = song.singer, mp3 = song.path, album = song.image;
-                    return `<div class="song">
+                    return `<div class="song" data-song-id="${index}">
                         <div class="thumb" style="background-image: url(${album})">
                         </div>
                         <div class="body">
@@ -172,7 +172,6 @@ export default class Play {
             if (!shuffleButton.classList.contains("active")) {
                 this.#autoNext();
             } else {
-                console.log(Math.floor(Math.random() * this.#songs.length-1) + 1);
                 this.#autoRandom();
             }
         });
@@ -185,19 +184,34 @@ export default class Play {
         loopButton.addEventListener("click", ()=>{
             if (loopButton.classList.contains("active")) {
                 audioControl.loop = false;
+                this.#flag="next";
             } else {
                 audioControl.loop = true;
+                this.#flag="loop";
             }
             loopButton.classList.toggle("active");
+            shuffleButton.classList.remove("active");
+            
         });
         shuffleButton.addEventListener("click", ()=>{
+            if (shuffleButton.classList.contains("active")) {
+                this.#flag="next";
+            } else {
+                this.#flag="shuffle";
+            }
             shuffleButton.classList.toggle("active");
+            loopButton.classList.remove("active");
         });
         audioControl.addEventListener("playing", ()=> {
             this.#isPlayed = true;
             this.controls.classList.add("playing");
             spin.play();
             this.progress.setAttribute("max", this.#songLength());
+        });
+        audioControl.addEventListener("playing", ()=> {
+            let index = this.#currentSong;
+            document.querySelectorAll(".song").forEach(e=>e.classList.remove("active"));
+            document.querySelectorAll(".song")[index].classList.add("active");
         });
         audioControl.addEventListener("pause", ()=> {
             this.#isPlayed = false;
@@ -208,9 +222,11 @@ export default class Play {
             this.progress.value = this.percent();
         });
         audioControl.addEventListener("ended", () => {
-            if (!loopButton.classList.contains("active") && !shuffleButton.classList.contains("active")) {
+            if (this.#flag=="next") {
                 this.#autoNext();
-            } else if (shuffleButton.classList.contains("active")) {
+                //console.log(333);
+                
+            } else if (this.#flag=="shuffle") {
                 this.#autoRandom();
             }
         })
@@ -223,5 +239,11 @@ export default class Play {
         this.renderList();
         this.renderSong(this.#currentSong);
         this.renderEvent();
+    }
+
+    clickToPlay(id=this.#currentSong) {
+        this.#currentSong = id;
+        this.renderSong(id);
+        this.play();
     }
 }

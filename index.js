@@ -8,6 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // init player
     var player = new Play($('.playlist'), $('h2'), $('.cd'), $('#audio'),  $('.player'), $('.progress'));
     player.run();
+
+    $$('.song').forEach(e=>{
+      e.addEventListener("click", ()=>{
+        let playID = e.getAttribute("data-song-id");
+        if (playID) player.clickToPlay(playID);
+      })
+    })
 })
 
 /* 
